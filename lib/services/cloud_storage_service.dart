@@ -9,29 +9,23 @@ class CloudStorageService {
       cloud_storage.FirebaseStorage.instance;
 
   /// Upload Images
-  Future<void> uploadFile(String filePath, String fileName) async {
+  Future<String?> uploadFile(String filePath, String fileName) async {
     File file = File(filePath);
     try {
       await storage.ref('test/$fileName').putFile(file);
+      String downloadURL = await storage.ref('test/$fileName').getDownloadURL();
+      return downloadURL;
     } on FirebaseException catch (e) {
       debugPrint(e.message.toString());
+      return null;
+    } catch (e) {
+      debugPrint(e.toString());
+      return null;
     }
   }
 
-  // /// Uploaded Images List
-  // Future<cloud_storage.ListResult> listOfFiles() async {
-  //   cloud_storage.ListResult result = await storage.ref('test').listAll();
-
-  //   for (var reference in result.items) {
-  //     debugPrint('Found File: $reference');
-  //   }
-  //   return result;
-  // }
-
-  /// DownloadURL Images
   Future<String> downloadURL(String fileName) async {
     String downloadFile = await storage.ref('test/$fileName').getDownloadURL();
-    print('DownloadFile URL: ${downloadFile}');
     return downloadFile;
   }
 }
