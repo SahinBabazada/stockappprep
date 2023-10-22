@@ -202,7 +202,7 @@ class ProductScreen extends ConsumerWidget {
                     ),
                   ),
                 ),
-                loading: () => const CircularProgressIndicator(),
+                loading: () => const Center(child: CircularProgressIndicator()),
                 error: (error, stack) =>
                     const Center(child: Text('An error occurred')),
               ),
