@@ -31,6 +31,7 @@ class CloudStorageService {
   /// DownloadURL Images
   Future<String> downloadURL(String fileName) async {
     String downloadFile = await storage.ref('test/$fileName').getDownloadURL();
+    print('DownloadFile URL: ${downloadFile}');
     return downloadFile;
   }
 }
