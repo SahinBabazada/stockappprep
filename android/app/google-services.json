@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "853650997951",
+    "project_id": "stockapp-d5689",
+    "storage_bucket": "stockapp-d5689.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:853650997951:android:aded1101d89e25a74fbc0a",
+        "android_client_info": {
+          "package_name": "com.stockapp.stockapp"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD75GT-Z6FY2zmzMj4BcmVMsNNyUyeuP1A"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:853650997951:android:8668671b96e329f94fbc0a",
+        "android_client_info": {
+          "package_name": "com.stockapp.stockappprep"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyD75GT-Z6FY2zmzMj4BcmVMsNNyUyeuP1A"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
