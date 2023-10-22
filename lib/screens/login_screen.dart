@@ -7,7 +7,7 @@ class LoginScreen extends ConsumerWidget {
   final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
 
-  LoginScreen({super.key});
+  LoginScreen({Key? key}) : super(key: key); // Corrected the key passing
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -45,20 +45,25 @@ class LoginScreen extends ConsumerWidget {
                                 email: _usernameController.text,
                                 password: _passwordController.text,
                               );
-                          // ignore: empty_catches
-                        } catch (e) {}
+                        } catch (e) {
+                          // You might want to show an error to the user
+                          // ignore: use_build_context_synchronously
+                          ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Error: $e')));
+                        }
                       },
-                      child: const Text('Login')), // Pass `ref` here
+                      child: const Text('Login')),
                 ],
               ),
             );
           } else {
-            Navigator.push(
-              context,
-              MaterialPageRoute(builder: (context) => ProductScreen()),
-            );
+            Future.microtask(() => // Use Future.microtask for navigation
+                Navigator.pushReplacement(
+                  context,
+                  MaterialPageRoute(builder: (context) => ProductScreen()),
+                ));
+            return const SizedBox.shrink(); // Return a minimal widget
           }
-          return null;
         },
         loading: () => const Center(child: CircularProgressIndicator()),
         error: (error, stack) => Center(child: Text('Error: $error')),

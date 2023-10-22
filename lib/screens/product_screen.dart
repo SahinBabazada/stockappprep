@@ -1,14 +1,12 @@
-// ... (rest of the imports)
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-
 import '../models/product_model.dart';
 import '../providers/providers.dart';
 import 'detail_screen.dart';
+import 'login_screen.dart';
 
 class ProductScreen extends ConsumerWidget {
-  final TextEditingController _productNameController = TextEditingController();
+  final _productNameController = TextEditingController();
 
   ProductScreen({super.key});
 
@@ -16,110 +14,114 @@ class ProductScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final products = ref.watch(productsStreamProvider);
     final productService = ref.read(productsServiceProvider.notifier);
-
+    final userAsyncValue = ref.watch(authStateChangesProvider);
     return Scaffold(
       appBar: AppBar(
-        automaticallyImplyLeading: false,
         title: const Text('Products'),
+        actions: [
+          if (userAsyncValue.maybeWhen(
+              data: (user) => user != null, orElse: () => false))
+            IconButton(
+              icon: const Icon(Icons.logout),
+              onPressed: () async {
+                try {
+                  await ref.read(firebaseAuthProvider).signOut();
+                  // ignore: use_build_context_synchronously
+                  Future.microtask(() => // Use Future.microtask for navigation
+                      Navigator.pushReplacement(
+                        context,
+                        MaterialPageRoute(builder: (context) => LoginScreen()),
+                      ));
+                } catch (e) {
+                  print(e);
+                }
+              },
+            ),
+        ],
       ),
       body: Column(
         children: [
           Expanded(
             child: products.when(
-              data: (products) =>
-                  _buildProductList(context, products, productService),
-              loading: () => const Center(child: CircularProgressIndicator()),
+              data: (products) => ListView.builder(
+                itemCount: products.length,
+                itemBuilder: (_, index) => GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                          builder: (context) => DetailScreen(
+                                product: products[index],
+                              )),
+                    );
+                  },
+                  child: Dismissible(
+                    background: Container(
+                      color: Colors.red,
+                      alignment: Alignment.centerLeft,
+                      padding: const EdgeInsets.only(left: 20.0),
+                      child: const Icon(Icons.delete, color: Colors.white),
+                    ),
+                    secondaryBackground: Container(
+                      color: Colors.red,
+                      alignment: Alignment.centerRight,
+                      padding: const EdgeInsets.only(right: 20.0),
+                      child: const Icon(Icons.delete, color: Colors.white),
+                    ),
+                    key: ValueKey<String>(products[index].id!),
+                    onDismissed: (DismissDirection direction) {
+                      productService.deleteProduct(products[index]);
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        SnackBar(
+                            content: Text('${products[index].name} removed')),
+                      );
+                    },
+                    child: ListTile(
+                      title: Text(products[index].name ?? ''),
+                      subtitle: Text(products[index].stockCount.toString()),
+                      trailing: ElevatedButton(
+                        onPressed: (products[index].stockOut == false)
+                            ? () async {
+                                final product = products[index];
+                                if (product.stockCount! > 0) {
+                                  productService.buyProduct(products[index]);
+                                }
+                              }
+                            : null,
+                        child: const Text('Buy'),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+              loading: () => const CircularProgressIndicator(),
               error: (error, stack) =>
                   const Center(child: Text('An error occurred')),
             ),
           ),
-          _buildAddProductField(productService),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildProductList(
-      BuildContext context, List<Product> products, var productService) {
-    return ListView.builder(
-      itemCount: products.length,
-      itemBuilder: (_, index) {
-        final product = products[index];
-        return _buildProductListItem(context, product, productService);
-      },
-    );
-  }
-
-  Widget _buildProductListItem(
-      BuildContext context, Product product, var productService) {
-    return GestureDetector(
-      onTap: () => _navigateToDetails(context, product),
-      child: Dismissible(
-        background: _buildDismissBackground(Alignment.centerLeft),
-        secondaryBackground: _buildDismissBackground(Alignment.centerRight),
-        key: ValueKey<String>(product.id!),
-        onDismissed: (direction) {
-          productService.deleteProduct(product);
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('${product.name} removed')),
-          );
-        },
-        child: ListTile(
-          title: Text(product.name ?? ''),
-          subtitle: Text(product.stockCount.toString()),
-          trailing: ElevatedButton(
-            onPressed: (product.stockOut == false && product.stockCount! > 0)
-                ? () => productService.buyProduct(product)
-                : null,
-            child: const Text('Buy'),
-          ),
-        ),
-      ),
-    );
-  }
-
-  void _navigateToDetails(BuildContext context, Product product) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (context) => DetailScreen(product: product),
-      ),
-    );
-  }
-
-  Widget _buildDismissBackground(AlignmentGeometry alignment) {
-    return Container(
-      color: Colors.red,
-      alignment: alignment,
-      padding: alignment == Alignment.centerLeft
-          ? const EdgeInsets.only(left: 20.0)
-          : const EdgeInsets.only(right: 20.0),
-      child: const Icon(Icons.delete, color: Colors.white),
-    );
-  }
-
-  Widget _buildAddProductField(var productService) {
-    return Padding(
-      padding: const EdgeInsets.all(16.0),
-      child: Row(
-        children: [
-          Expanded(
-            child: TextField(
-              controller: _productNameController,
-              decoration: const InputDecoration(labelText: 'Product Name'),
+          Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _productNameController,
+                    decoration:
+                        const InputDecoration(labelText: 'Product Name'),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.add),
+                  onPressed: () {
+                    productService.addProduct(Product(
+                        name: _productNameController.text,
+                        stockCount: 10,
+                        stockOut: false));
+                    _productNameController.clear();
+                  },
+                ),
+              ],
             ),
-          ),
-          IconButton(
-            icon: const Icon(Icons.add),
-            onPressed: () {
-              if (_productNameController.text.isNotEmpty) {
-                productService.addProduct(Product(
-                  name: _productNameController.text,
-                  stockCount: 10,
-                  stockOut: false,
-                ));
-                _productNameController.clear();
-              }
-            },
           ),
         ],
       ),
